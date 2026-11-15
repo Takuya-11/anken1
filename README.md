@@ -10,7 +10,7 @@
 
 | 管理画面 — FAQ | 会話ログ | 一斉配信 |
 |---|---|---|
-| *(スクリーンショット)* | *(スクリーンショット)* | *(スクリーンショット)* |
+| ![FAQ管理](docs/images/admin-faqs.png) | ![会話ログ](docs/images/admin-logs.png) | ![一斉配信](docs/images/admin-broadcast.png) |
 
 ---
 
