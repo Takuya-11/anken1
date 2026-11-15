@@ -43,16 +43,18 @@ export default async function AdminLayout({
         </div>
       </header>
 
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-lg mx-auto px-4 flex gap-6">
+      <nav className="bg-white border-b border-gray-200 overflow-x-auto">
+        <div className="max-w-lg mx-auto px-4 flex gap-1 min-w-max">
           {[
             { href: '/admin/faqs', label: 'FAQ' },
             { href: '/admin/menus', label: 'メニュー' },
+            { href: '/admin/logs', label: '会話ログ' },
+            { href: '/admin/broadcast', label: '一斉配信' },
           ].map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className="py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-600 transition-colors"
+              className="py-3 px-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-600 transition-colors whitespace-nowrap"
             >
               {label}
             </Link>

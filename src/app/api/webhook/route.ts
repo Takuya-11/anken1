@@ -33,7 +33,6 @@ async function handleEvent(event: webhook.Event) {
 
   const { answer, confidence } = await askClaude(textMsg.text)
 
-  // 確信度に関わらずお客様には常に回答を返す
   const replyPromise =
     replyToken
       ? lineClient.replyMessage({
@@ -42,10 +41,18 @@ async function handleEvent(event: webhook.Event) {
         })
       : Promise.resolve()
 
+  // 全会話を記録
+  const logPromise = supabaseServer.from('conversations').insert({
+    line_user_id: userId,
+    user_message: textMsg.text,
+    bot_answer: answer,
+    confidence,
+  })
+
   if (confidence === '低') {
-    // 確信度が低い場合のみオーナーに通知 + ログ記録
     await Promise.all([
       replyPromise,
+      logPromise,
       lineClient.pushMessage({
         to: process.env.LINE_OWNER_USER_ID!,
         messages: [
@@ -61,6 +68,6 @@ async function handleEvent(event: webhook.Event) {
       }),
     ])
   } else {
-    await replyPromise
+    await Promise.all([replyPromise, logPromise])
   }
 }

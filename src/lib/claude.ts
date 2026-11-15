@@ -75,12 +75,13 @@ export async function askClaude(
 ): Promise<{ answer: string; confidence: Confidence }> {
   const systemPrompt = await buildSystemPrompt()
 
+  // temperature は API では有効だが SDK v1.8.0 の型定義に未記載のため型アサーションを使用
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 400,
-    temperature: 0,
     system: systemPrompt,
     messages: [{ role: 'user', content: userMessage }],
+    ...(({ temperature: 0 }) as Record<string, unknown>),
   })
 
   const raw =
