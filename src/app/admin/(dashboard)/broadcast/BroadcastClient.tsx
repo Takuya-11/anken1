@@ -56,7 +56,7 @@ export default function BroadcastClient({ logs }: { logs: BroadcastLog[] }) {
             onChange={(e) => setMessage(e.target.value)}
             rows={5}
             placeholder="お知らせ内容を入力してください"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
           />
           <p className="text-xs text-gray-400">
             LINE 友だち全員（約300人）に送信されます

@@ -31,29 +31,37 @@ async function handleEvent(event: webhook.Event) {
   const replyToken = (event as webhook.MessageEvent).replyToken
   const userId = event.source?.userId ?? ''
 
-  const { answer, confidence } = await askClaude(textMsg.text)
+  let result: Awaited<ReturnType<typeof askClaude>>
+  try {
+    result = await askClaude(textMsg.text)
+  } catch (err) {
+    console.error('[webhook] askClaude error:', err)
+    return
+  }
+  const { answer, confidence } = result
 
-  const replyPromise =
-    replyToken
-      ? lineClient.replyMessage({
-          replyToken,
-          messages: [{ type: 'text', text: answer }],
-        })
-      : Promise.resolve()
+  if (replyToken) {
+    try {
+      await lineClient.replyMessage({
+        replyToken,
+        messages: [{ type: 'text', text: answer }],
+      })
+    } catch (err) {
+      console.error('[webhook] replyMessage error:', err)
+    }
+  }
 
-  // 全会話を記録
-  const logPromise = supabaseServer.from('conversations').insert({
+  const { error: logErr } = await supabaseServer.from('conversations').insert({
     line_user_id: userId,
     user_message: textMsg.text,
     bot_answer: answer,
     confidence,
   })
+  if (logErr) console.error('[webhook] conversations insert error:', logErr)
 
   if (confidence === '低') {
-    await Promise.all([
-      replyPromise,
-      logPromise,
-      lineClient.pushMessage({
+    try {
+      await lineClient.pushMessage({
         to: process.env.LINE_OWNER_USER_ID!,
         messages: [
           {
@@ -61,13 +69,14 @@ async function handleEvent(event: webhook.Event) {
             text: `⚠️ 確信度【低】の問い合わせ（要確認）\n\n質問：「${textMsg.text}」\nAI 回答：「${answer}」`,
           },
         ],
-      }),
-      supabaseServer.from('escalation_logs').insert({
-        line_user_id: userId,
-        message_text: textMsg.text,
-      }),
-    ])
-  } else {
-    await Promise.all([replyPromise, logPromise])
+      })
+    } catch (err) {
+      console.error('[webhook] pushMessage error:', err)
+    }
+    const { error: escErr } = await supabaseServer.from('escalation_logs').insert({
+      line_user_id: userId,
+      message_text: textMsg.text,
+    })
+    if (escErr) console.error('[webhook] escalation_logs insert error:', escErr)
   }
 }

@@ -75,22 +75,22 @@ export async function askClaude(
 ): Promise<{ answer: string; confidence: Confidence }> {
   const systemPrompt = await buildSystemPrompt()
 
-  // temperature は API では有効だが SDK v1.8.0 の型定義に未記載のため型アサーションを使用
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 400,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userMessage }],
-    ...(({ temperature: 0 }) as Record<string, unknown>),
-  })
-
-  const raw =
-    message.content[0].type === 'text' ? message.content[0].text.trim() : ''
-
-  // Claude がコードブロック(```json ... ```)で包む場合を除去
-  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
-
   try {
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 400,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
+    })
+
+    const raw =
+      message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+
+    const cleaned = raw
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/, '')
+      .trim()
+
     const parsed = JSON.parse(cleaned) as { answer: string; confidence: Confidence }
     return {
       answer: parsed.answer ?? '',
@@ -98,8 +98,8 @@ export async function askClaude(
         ? parsed.confidence
         : '低',
     }
-  } catch {
-    // JSON パース失敗時は安全側（低）に倒してエスカレーション
+  } catch (err) {
+    console.error('[askClaude] error:', err)
     return { answer: 'ただいま確認中です。しばらくお待ちください。', confidence: '低' }
   }
 }
