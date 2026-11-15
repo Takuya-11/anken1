@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# anken1 — 美容室向け LINE bot + AI 自動応答
 
-## Getting Started
+## プロジェクト概要
 
-First, run the development server:
+美容室オーナーからの依頼。LINE 公式アカウント（友だち 300 人）に届く
+1日 10〜15 件の問い合わせを AI で自動応答するシステムを構築する。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 技術スタック
+
+| 層 | 技術 | 備考 |
+|---|---|---|
+| フロント / API | Next.js + Vercel | 無料枠で完結 |
+| DB | Supabase | 無料枠 / RLS でセキュリティ確保 |
+| AI | Claude API (Sonnet 4.6) | 自然な日本語応答 |
+| LINE 連携 | LINE Messaging API | 既存の公式アカウントをそのまま活用 |
+| 管理画面認証 | Supabase Auth (マジックリンク) | スマホ対応 |
+
+## システム構成
+
+```
+LINE Messaging API
+      ↓ Webhook
+Next.js API Route (POST /api/webhook)
+      ↓
+  Claude API ← Supabase（FAQ / メニュー DB）
+      ↓
+  Reply Message（無料・無制限）
+
+エスカレーション時:
+  Push Message → オーナーの LINE へ直接通知（3円/件）
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## セットアップ
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+cp .env.example .env.local   # 値を入力する
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ディレクトリ構成
 
-## Learn More
+```
+anken1/
+├── CLAUDE.md             # Claude Code 向けガイド
+├── README.md
+├── requirements.md       # ヒアリング結果・スコープ定義
+├── proposal.md           # クライアント向け提案書
+├── .env.example          # 環境変数テンプレート
+└── src/
+    └── app/
+        ├── api/
+        │   └── webhook/  # LINE Webhook エンドポイント
+        └── admin/        # 管理画面
+```
 
-To learn more about Next.js, take a look at the following resources:
+## ロードマップ
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Phase 1（本案件）
+- FAQ 自動応答（頻出 5 質問）
+- エスカレーション通知（オーナー LINE へ）
+- 管理画面（FAQ / メニュー更新）
+- お知らせ一斉配信
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Phase 2（将来提案）
+- 予約機能（カレンダー連携・空き状況自動応答）
+- リピーター向けパーソナライズ応答
